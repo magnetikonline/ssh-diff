@@ -1,7 +1,7 @@
 # SSH diff
 Command line utility to diff a local directory structure of files against the root of a remote server over SSH.
 
-*Why?* Well, I like to keep production server config files under version control in local repositories ([for example](https://github.com/magnetikonline/webserverinstall.ubuntu12.04/tree/master/00root)) - this utility was created to allow for quick discovery of any file-based differences between the two. Only local files that are different/missing from remote server are checked.
+*Why?* Well, I like to keep production server config files under version control in local repositories ([for example](https://github.com/magnetikonline/webserverinstall.ubuntu12.04/tree/master/00root)) - this utility was created to allow for quick discovery of any file-based differences between the two. Only local files that are different or missing from the remote server are checked for.
 
 Differences are found by comparing SHA1 keys of a file content, using PHP's `sha1_file()` on local filesystem and `sha1sum [filename]` on the remote server, optionally server files that are found to be different can be transferred back to your local machine over SCP for diff checking via [Meld](http://meldmerge.org/), [KDiff3](http://kdiff3.sourceforge.net/), etc.
 
