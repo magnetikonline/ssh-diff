@@ -29,10 +29,13 @@ class SSHDiff {
 		$this->sshExec($sshSession,'logout');
 
 		// all done
-		$this->writeLine('=================================');
-		$this->writeLine('All done' . (($differencesFound) ? ' - differences were found' : ''));
-		$this->writeLine();
+		$summaryText = 'All done - ' . (($differencesFound) ? 'differences were found' : 'no differences');
+		$this->writeLine(
+			self::LE . str_repeat('=',strlen($summaryText)) . self::LE .
+			$summaryText
+		);
 
+		// exit with error code two if diffs found
 		exit(($differencesFound) ? 2 : 0);
 	}
 
@@ -48,7 +51,6 @@ class SSHDiff {
 				'<Required>' . self::LE .
 				'  -s[server]           Target SSH server address/host' . self::LE .
 				'  --root-dir=[dir]     Source root directory' . self::LE . self::LE .
-
 				'<Optional>' . self::LE .
 				'  -p[port]             Alternative SSH port number, default is 22' . self::LE .
 				'  -u[username]         User for SSH login, if not given current shell username used' . self::LE .
