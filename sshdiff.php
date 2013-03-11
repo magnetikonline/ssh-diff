@@ -20,14 +20,14 @@ class SSHDiff {
 		if (($sshSession = $this->sshConnect($optionList)) === false) exit(1);
 
 		// start processing
-		list($differencesFoundCount,$permissionIssueCount) = $this->process($optionList,$sshSession);
+		list($differenceFoundCount,$permissionIssueCount) = $this->process($optionList,$sshSession);
 
 		// close SSH connection and write summary report
 		$this->sshExec($sshSession,'logout');
-		$this->writeSummary($differencesFoundCount,$permissionIssueCount);
+		$this->writeSummary($differenceFoundCount,$permissionIssueCount);
 
 		// exit with error code 2 (two) if differences found
-		exit(($differencesFoundCount > 0) ? 2 : 0);
+		exit(($differenceFoundCount) ? 2 : 0);
 	}
 
 	private function getOptions(array $argv) {
@@ -164,10 +164,10 @@ class SSHDiff {
 		);
 	}
 
-	private function workDir($isVerbose,$sshSession,$baseDirLocal,$diffDir,$childDir = '',$differencesFoundCount = 0,$permissionIssueCount = 0) {
+	private function workDir($isVerbose,$sshSession,$baseDirLocal,$diffDir,$childDir = '',$differenceFoundCount = 0,$permissionIssueCount = 0) {
 
 		$dirHandle = @opendir($baseDirLocal . $childDir);
-		if ($dirHandle === false) return [$differencesFoundCount,$permissionIssueCount];
+		if ($dirHandle === false) return [$differenceFoundCount,$permissionIssueCount];
 
 		while (($fileItem = readdir($dirHandle)) !== false) {
 			// skip current/parent directories
@@ -179,13 +179,13 @@ class SSHDiff {
 
 			if (is_dir($fileItemLocal)) {
 				// file is a directory, call $this->workDir() recursively
-				list($differencesFoundCount,$permissionIssueCount) = $this->workDir(
+				list($differenceFoundCount,$permissionIssueCount) = $this->workDir(
 					$isVerbose,
 					$sshSession,
 					$baseDirLocal,
 					$diffDir,
 					$childDir . '/' . $fileItem,
-					$differencesFoundCount,
+					$differenceFoundCount,
 					$permissionIssueCount
 				);
 
@@ -208,18 +208,18 @@ class SSHDiff {
 			// check local/remote file SHA1
 			if ($fileSHA1Remote === self::SHA1SUM_ERROR_PERMISSION_DENIED) {
 				// unable to access remote file due to permissions
-				$this->writeLine('Permissions issue: ' . $fileItemRemote);
+				$this->writeLine('Permission denied: ' . $fileItemRemote);
 				$permissionIssueCount++;
 
 			} elseif ($fileSHA1Remote === self::SHA1SUM_ERROR_NOT_FOUND) {
 				// remote file not found
-				$this->writeLine('File missing: ' . $fileItemRemote);
-				$differencesFoundCount++;
+				$this->writeLine('Missing: ' . $fileItemRemote);
+				$differenceFoundCount++;
 
 			} elseif ($fileSHA1Local != $fileSHA1Remote) {
-				// file differences found
-				$this->writeLine('Difference found: ' . $fileItemRemote);
-				$differencesFoundCount++;
+				// file difference(s) found
+				$this->writeLine('Difference: ' . $fileItemRemote);
+				$differenceFoundCount++;
 
 				if ($diffDir !== false) {
 					// diff directory defined, SCP file to local disk for offline comparing
@@ -236,13 +236,13 @@ class SSHDiff {
 
 		// close directory handle
 		closedir($dirHandle);
-		return [$differencesFoundCount,$permissionIssueCount];
+		return [$differenceFoundCount,$permissionIssueCount];
 	}
 
-	private function writeSummary($differencesFoundCount,$permissionIssueCount) {
+	private function writeSummary($differenceFoundCount,$permissionIssueCount) {
 
-		$summaryText = 'All done - ' . (($differencesFoundCount > 0) ? $differencesFoundCount . ' difference(s) found' : 'no differences');
-		if ($permissionIssueCount > 0) $summaryText .= ', unable to check ' . $permissionIssueCount . ' file(s) due to permissions';
+		$summaryText = 'All done - ' . (($differenceFoundCount) ? $differenceFoundCount . ' difference(s) found' : 'no differences');
+		if ($permissionIssueCount) $summaryText .= ', unable to check ' . $permissionIssueCount . ' file(s) due to permissions';
 
 		$this->writeLine(
 			self::LE . str_repeat('=',strlen($summaryText)) . self::LE .
