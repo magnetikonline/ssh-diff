@@ -1,14 +1,11 @@
 #!/usr/bin/env php
 <?php
-// sshdiff.php
-
-
-
 class SSHDiff {
 
 	const LE = "\n";
-	const SHELL_SHA1_SPRINTF = '[ -f "%1$s" ] && sha1sum "%1$s"';
-
+	const SHA1SUM_SHELL_SPRINTF = 'sha1sum "%1$s" 2>&1';
+	const SHA1SUM_ERROR_NOT_FOUND = 1;
+	const SHA1SUM_ERROR_PERMISSION_DENIED = 2;
 
 
 	public function __construct(array $argv) {
@@ -23,19 +20,13 @@ class SSHDiff {
 		if (($sshSession = $this->sshConnect($optionList)) === false) exit(1);
 
 		// start processing
-		$differencesFound = $this->process($optionList,$sshSession);
+		list($differencesFound,$permissionIssue) = $this->process($optionList,$sshSession);
 
-		// close SSH connection
+		// close SSH connection and write summary report
 		$this->sshExec($sshSession,'logout');
+		$this->writeSummary($differencesFound,$permissionIssue);
 
-		// all done
-		$summaryText = 'All done - ' . (($differencesFound) ? 'differences were found' : 'no differences');
-		$this->writeLine(
-			self::LE . str_repeat('=',strlen($summaryText)) . self::LE .
-			$summaryText
-		);
-
-		// exit with error code two if diffs found
+		// exit with error code 2 (two) if differences found
 		exit(($differencesFound) ? 2 : 0);
 	}
 
@@ -173,10 +164,10 @@ class SSHDiff {
 		);
 	}
 
-	private function workDir($isVerbose,$sshSession,$baseDirLocal,$diffDir,$childDir = '',$differencesFound = false) {
+	private function workDir($isVerbose,$sshSession,$baseDirLocal,$diffDir,$childDir = '',$differencesFound = false,$permissionIssue = false) {
 
 		$dirHandle = @opendir($baseDirLocal . $childDir);
-		if ($dirHandle === false) return $differencesFound;
+		if ($dirHandle === false) return [$differencesFound,$permissionIssue];
 
 		while (($fileItem = readdir($dirHandle)) !== false) {
 			// skip current/parent directories
@@ -188,13 +179,14 @@ class SSHDiff {
 
 			if (is_dir($fileItemLocal)) {
 				// file is a directory, call $this->workDir() recursively
-				$differencesFound = $this->workDir(
+				list($differencesFound,$permissionIssue) = $this->workDir(
 					$isVerbose,
 					$sshSession,
 					$baseDirLocal,
 					$diffDir,
 					$childDir . '/' . $fileItem,
-					$differencesFound
+					$differencesFound,
+					$permissionIssue
 				);
 
 				continue;
@@ -206,15 +198,23 @@ class SSHDiff {
 				$this->writeLine(sprintf('Checking: %s [%s]',$fileItemRemote,$fileSHA1Local));
 			}
 
-			$fileSHA1Remote = $this->parseSHA1shell(
-				$this->sshExec($sshSession,sprintf(self::SHELL_SHA1_SPRINTF,$fileItemRemote))
+			$fileSHA1Remote = $this->parseSHA1SumShell(
+				$this->sshExec($sshSession,sprintf(
+					self::SHA1SUM_SHELL_SPRINTF,
+					$this->escapeFilePath($fileItemRemote)
+				))
 			);
 
 			// check local/remote file SHA1
-			if ($fileSHA1Remote === false) {
+			if ($fileSHA1Remote === self::SHA1SUM_ERROR_NOT_FOUND) {
 				// remote file not found
-				$this->writeLine('Remote file missing: ' . $fileItemRemote);
+				$this->writeLine('File missing: ' . $fileItemRemote);
 				$differencesFound = true;
+
+			} elseif ($fileSHA1Remote === self::SHA1SUM_ERROR_PERMISSION_DENIED) {
+				// unable to access remote file due to permissions
+				$this->writeLine('Permissions issue: ' . $fileItemRemote);
+				$permissionIssue = true;
 
 			} elseif ($fileSHA1Local != $fileSHA1Remote) {
 				// file differences found
@@ -236,12 +236,39 @@ class SSHDiff {
 
 		// close directory handle
 		closedir($dirHandle);
-		return $differencesFound;
+		return [$differencesFound,$permissionIssue];
 	}
 
-	private function parseSHA1shell($data) {
+	private function writeSummary($differencesFound,$permissionIssue) {
 
-		return (preg_match('/^([\da-f]{40})  /',$data,$match)) ? $match[1] : false;
+		$summaryText = 'All done - ' . (($differencesFound) ? 'differences were found' : 'no differences');
+		if ($permissionIssue) $summaryText .= ', unable to check all files due to permissions';
+
+		$this->writeLine(
+			self::LE . str_repeat('=',strlen($summaryText)) . self::LE .
+			$summaryText
+		);
+	}
+
+	private function parseSHA1SumShell($data) {
+
+		if (preg_match('/^([\da-f]{40})  /',$data,$match)) {
+			// generated SHA1 hash from source file
+			return $match[1];
+		}
+
+		if (preg_match('/: Permission denied$/',$data)) {
+			// unable to access file (or a path therein) due to permissions
+			return self::SHA1SUM_ERROR_PERMISSION_DENIED;
+		}
+
+		// assume file not found
+		return self::SHA1SUM_ERROR_NOT_FOUND;
+	}
+
+	private function escapeFilePath($path) {
+
+		return str_replace('"','\"',$path);
 	}
 
 	private function writeLine($text = '',$isError = false) {
