@@ -41,8 +41,8 @@ Would/could result in something like this:
 	$ ./sshdiff.php -s myserver.domain \
 		--root-dir /myserver.domain/filesystem \
 		--diff-dir /tmp/diffs
-	Remote file missing: /etc/redis.conf
-	Difference found: /etc/nginx/nginx.conf
+	Missing: /etc/redis.conf
+	Difference: /etc/nginx/nginx.conf
 	=================================
 	All done - differences were found
 
