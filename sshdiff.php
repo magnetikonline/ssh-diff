@@ -37,18 +37,23 @@ class SSHDiff {
 		// required options given?
 		if (!isset($optionList['s'],$optionList['root-dir'])) {
 			// no - display usage
-			$this->writeLine(
-				'Usage: ' . basename($argv[0]) . ' -s[server] -u[username] --priv-key=[file] --pub-key=[file] --root-dir=[dir] --diff-dir=[dir] -v' . self::LE . self::LE .
-				'<Required>' . self::LE .
-				'  -s[server]           Target SSH server address/host' . self::LE .
-				'  --root-dir=[dir]     Source root directory' . self::LE . self::LE .
-				'<Optional>' . self::LE .
-				'  -p[port]             Alternative SSH port number, default is 22' . self::LE .
-				'  -u[username]         User for SSH login, if not given current shell username used' . self::LE .
-				'  -v                   Increase verbosity' . self::LE .
-				'  --diff-dir=[dir]     If file differences found target file(s) will be placed into this directory' . self::LE .
-				'  --priv-key=[file]    Private key file location if not given [/home/username/.ssh/id_rsa] used' . self::LE .
-				'  --pub-key=[file]     Public key file location if not given [/home/username/.ssh/id_rsa.pub] used' . self::LE
+			$scriptName = basename($argv[0]);
+
+			$this->writeLine(<<<"EOT"
+Usage: {$scriptName} -s SERVER -u USERNAME --priv-key FILE --pub-key FILE --root-dir DIR --diff-dir DIR -v
+
+<Required>
+  -s SERVER           Target SSH server address/host
+  --root-dir DIR      Source root directory
+
+<Optional>
+  -p PORT             Alternative SSH port number, default is 22
+  -u USERNAME         User for SSH login, if not given current shell username used
+  -v                  Increase verbosity
+  --diff-dir DIR      If file differences found target file(s) will be placed into this directory
+  --priv-key FILE     Private key file location - default [/home/username/.ssh/id_rsa]
+  --pub-key FILE      Public key file location - default [/home/username/.ssh/id_rsa.pub]
+EOT
 			);
 
 			return false;
