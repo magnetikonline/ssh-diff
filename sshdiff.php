@@ -40,19 +40,20 @@ class SSHDiff {
 			$scriptName = basename($argv[0]);
 
 			$this->writeLine(<<<"EOT"
-Usage: {$scriptName} -s SERVER -u USERNAME --priv-key FILE --pub-key FILE --root-dir DIR --diff-dir DIR -v
+Usage:
+  {$scriptName} -s SERVER -u USERNAME --priv-key FILE --pub-key FILE --root-dir DIR --diff-dir DIR -v
 
-<Required>
-  -s SERVER           Target SSH server address/host
-  --root-dir DIR      Source root directory
+Required:
+  -s SERVER        Target SSH server address/host
+  --root-dir DIR   Source root directory
 
-<Optional>
-  -p PORT             Alternative SSH port number, default is 22
-  -u USERNAME         User for SSH login, if not given current shell username used
-  -v                  Increase verbosity
-  --diff-dir DIR      If file differences found target file(s) will be placed into this directory
-  --priv-key FILE     Private key file location - default [/home/username/.ssh/id_rsa]
-  --pub-key FILE      Public key file location - default [/home/username/.ssh/id_rsa.pub]
+Optional:
+  -p PORT          Alternative SSH port number, default is 22
+  -u USERNAME      User for SSH login, if not given current shell username used
+  -v               Increase verbosity
+  --diff-dir DIR   If file differences found target file(s) will be placed into this directory
+  --priv-key FILE  Private key file location - default [/home/username/.ssh/id_rsa]
+  --pub-key FILE   Public key file location - default [/home/username/.ssh/id_rsa.pub]
 EOT
 			);
 
