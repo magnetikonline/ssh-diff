@@ -16,7 +16,7 @@ All SSH auth is via RSA public/private keys (as should any and all SSH).
 Also shown by running `sshdiff.php` without command line option(s).
 
 	Usage:
-	  sshdiff.php -s SERVER -u USERNAME --priv-key FILE --pub-key FILE --root-dir DIR --diff-dir DIR -v
+	  sshdiff.php -s SERVER --root-dir DIR
 
 	Required:
 	  -s SERVER        Target SSH server address/host

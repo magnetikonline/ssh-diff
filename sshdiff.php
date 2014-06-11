@@ -41,7 +41,7 @@ class SSHDiff {
 
 			$this->writeLine(<<<"EOT"
 Usage:
-  {$scriptName} -s SERVER -u USERNAME --priv-key FILE --pub-key FILE --root-dir DIR --diff-dir DIR -v
+  {$scriptName} -s SERVER --root-dir DIR
 
 Required:
   -s SERVER        Target SSH server address/host
