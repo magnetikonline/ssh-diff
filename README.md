@@ -37,16 +37,18 @@ Taking the following scenario:
 - Current local user for login username (`magnetik` in this case); `~/.ssh/id_rsa` and `~/.ssh/id_rsa.pub` for auth
 - Any remote file differences SCP'ed back to `/tmp/diffs`
 
-Would/could result in something like this:
+Would result in something like this:
 
-	$ ./sshdiff.php -s myserver.domain \
-		--root-dir /myserver.domain/filesystem \
-		--diff-dir /tmp/diffs
-	Missing: /etc/redis.conf
-	Difference: /etc/nginx/nginx.conf
-	=================================
-	All done - differences were found
+```sh
+$ ./sshdiff.php -s myserver.domain \
+	--root-dir /myserver.domain/filesystem \
+	--diff-dir /tmp/diffs
+Missing: /etc/redis.conf
+Difference: /etc/nginx/nginx.conf
+=================================
+All done - differences were found
 
-	$ diff \
-		/myserver.domain/filesystem/etc/nginx/nginx.conf \
-		/tmp/diffs/etc/nginx/nginx.conf
+$ diff \
+	/myserver.domain/filesystem/etc/nginx/nginx.conf \
+	/tmp/diffs/etc/nginx/nginx.conf
+```
