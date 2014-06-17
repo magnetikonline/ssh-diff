@@ -63,7 +63,7 @@ EOT
 		// check alternative SSH port if given
 		$sshPort = 22;
 		if (isset($optionList['p'])) {
-			if (!preg_match('/^\d{2,5}$/',$optionList['p'])) {
+			if (!preg_match('/^[0-9]{2,5}$/',$optionList['p'])) {
 				// invalid port
 				$this->writeLine('Invalid SSH port number - ' . $optionList['p'],true);
 				return false;
@@ -258,7 +258,7 @@ EOT
 
 	private function parseSHA1SumShell($data) {
 
-		if (preg_match('/^([\da-f]{40})  /',$data,$match)) {
+		if (preg_match('/^([0-9a-f]{40})  /',$data,$match)) {
 			// generated SHA1 hash from source file
 			return $match[1];
 		}
