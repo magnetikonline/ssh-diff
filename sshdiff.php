@@ -2,7 +2,6 @@
 <?php
 class SSHDiff {
 
-	const LE = "\n";
 	const SHA1SUM_SHELL_SPRINTF = 'sha1sum "%1$s" 2>&1';
 	const SHA1SUM_ERROR_NOT_FOUND = 1;
 	const SHA1SUM_ERROR_PERMISSION_DENIED = 2;
@@ -251,7 +250,7 @@ EOT
 		if ($permissionIssueCount) $summaryText .= ', unable to check ' . $permissionIssueCount . ' file(s) due to permissions';
 
 		$this->writeLine(
-			self::LE . str_repeat('=',strlen($summaryText)) . self::LE .
+			"\n" . str_repeat('=',strlen($summaryText)) . "\n" .
 			$summaryText
 		);
 	}
@@ -279,7 +278,7 @@ EOT
 
 	private function writeLine($text = '',$isError = false) {
 
-		echo((($isError) ? 'Error: ' : '') . $text . self::LE);
+		echo((($isError) ? 'Error: ' : '') . $text . "\n");
 	}
 }
 
