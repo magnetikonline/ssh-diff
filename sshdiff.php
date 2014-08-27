@@ -11,7 +11,7 @@ class SSHDiff {
 
 		// fetch command line options and validate given dirs - exit on error
 		if (
-			(($optionList = $this->getOptions($argv)) === false) ||
+			(($optionList = $this->getOptionList($argv)) === false) ||
 			(!$this->validatePaths($optionList))
 		) exit(1);
 
@@ -29,7 +29,7 @@ class SSHDiff {
 		exit(($differenceFoundCount) ? 2 : 0);
 	}
 
-	private function getOptions(array $argv) {
+	private function getOptionList(array $argv) {
 
 		$optionList = getopt('p:s:u:v',['diff-dir:','priv-key:','pub-key:','root-dir:']);
 
@@ -107,10 +107,10 @@ EOT
 			return false;
 		}
 
-		// diff dir (only if given as option)
+		// difference directory (only if given as option)
 		$diffDir = $optionList['diffDir'];
 		if (($diffDir !== false) && !is_dir($diffDir)) {
-			// differences dir does not exist, attempt to create it
+			// directory does not exist - attempt to create it
 			if (!@mkdir($diffDir,0777,true)) {
 				$this->writeLine('Unable to create differences directory - ' . $diffDir,true);
 				return false;
@@ -169,11 +169,18 @@ EOT
 		);
 	}
 
-	private function workDir($isVerbose,$sshSession,$baseDirLocal,$diffDir,$childDir = '',$differenceFoundCount = 0,$permissionIssueCount = 0) {
+	private function workDir(
+		$isVerbose,$sshSession,
+		$baseDirLocal,$diffDir,$childDir = '',
+		$differenceFoundCount = 0,$permissionIssueCount = 0
+	) {
 
-		$dirHandle = @opendir($baseDirLocal . $childDir);
-		if ($dirHandle === false) return [$differenceFoundCount,$permissionIssueCount];
+		if (!is_dir($baseDirLocal . $childDir)) {
+			// invalid source directory
+			return [$differenceFoundCount,$permissionIssueCount];
+		}
 
+		$dirHandle = opendir($baseDirLocal . $childDir);
 		while (($fileItem = readdir($dirHandle)) !== false) {
 			// skip current/parent directories
 			if (($fileItem == '.') || ($fileItem == '..')) continue;
@@ -185,13 +192,9 @@ EOT
 			if (is_dir($fileItemLocal)) {
 				// file is a directory, call $this->workDir() recursively
 				list($differenceFoundCount,$permissionIssueCount) = $this->workDir(
-					$isVerbose,
-					$sshSession,
-					$baseDirLocal,
-					$diffDir,
-					$childDir . '/' . $fileItem,
-					$differenceFoundCount,
-					$permissionIssueCount
+					$isVerbose,$sshSession,
+					$baseDirLocal,$diffDir,$fileItemRemote,
+					$differenceFoundCount,$permissionIssueCount
 				);
 
 				continue;
