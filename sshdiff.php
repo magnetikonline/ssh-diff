@@ -7,7 +7,7 @@ class SSHDiff {
 	const SHA1SUM_ERROR_PERMISSION_DENIED = 2;
 
 
-	public function __construct(array $argv) {
+	public function execute(array $argv) {
 
 		// fetch command line options and validate given dirs - exit on error
 		if (
@@ -244,13 +244,19 @@ EOT
 
 		// close directory handle
 		closedir($dirHandle);
+
+		// return number of file differences found and permission issues (unable to read server file)
 		return [$differenceFoundCount,$permissionIssueCount];
 	}
 
 	private function writeSummary($differenceFoundCount,$permissionIssueCount) {
 
 		$summaryText = 'All done - ' . (($differenceFoundCount) ? $differenceFoundCount . ' difference(s) found' : 'no differences');
-		if ($permissionIssueCount) $summaryText .= ', unable to check ' . $permissionIssueCount . ' file(s) due to permissions';
+
+		if ($permissionIssueCount > 0) {
+			// issues found checking server files - report total count
+			$summaryText .= ', unable to check ' . $permissionIssueCount . ' file(s) due to permissions';
+		}
 
 		$this->writeLine(
 			"\n" . str_repeat('=',strlen($summaryText)) . "\n" .
@@ -286,4 +292,4 @@ EOT
 }
 
 
-new SSHDiff($argv);
+(new SSHDiff())->execute($argv);
