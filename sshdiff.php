@@ -68,7 +68,7 @@ EOT
 				return false;
 			}
 
-			$sshPort = $optionList['p'] * 1;
+			$sshPort = ($optionList['p'] * 1); // cast as integer
 		}
 
 		// determine username for SSH login
